@@ -1,5 +1,7 @@
 package pl.jborkows.bilion;
 
+import pl.jborkows.bilion.runners.OwnSplit;
+import pl.jborkows.bilion.runners.OwnSplitStringGetters;
 import pl.jborkows.bilion.runners.Runner;
 import pl.jborkows.bilion.runners.Simple;
 
@@ -8,7 +10,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -17,7 +18,9 @@ public class Main {
     public static void main(String[] args) throws Exception {
         var path = extractPath(args);
         List<Runner> runners = List.of(
-          new Simple()
+          new Simple(),
+                new OwnSplit()
+//                new OwnSplitStringGetters()
         );
 
         var mapping = new LinkedHashMap<String, Long>(runners.size());
