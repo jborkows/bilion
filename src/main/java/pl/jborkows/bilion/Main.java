@@ -15,12 +15,12 @@ public class Main {
     public static void main(String[] args) throws Exception {
         var path = extractPath(args);
         List<Runner> runners = List.of(
-//                new Simple(), //-->base
-//                new OwnSplit(),
-//                new OwnSplitStringGetters()
-//                new OwnSplitDoubleParser(),
+                new Simple(), //-->base
+                new OwnSplit(),
+                new OwnSplitStringGetters(),
+                new OwnSplitDoubleParser(),
                 new OwnSplitDoubleActiveParser(),
-//                new OwnSplitDoubleActiveParserStaticWorkingArray(),
+                new OwnSplitDoubleActiveParserStaticWorkingArray(),
                 new OwnSplitDoubleActiveParserIndexBased()
         );
 
