@@ -15,13 +15,15 @@ public class Main {
     public static void main(String[] args) throws Exception {
         var path = extractPath(args);
         List<Runner> runners = List.of(
-                new Simple(), //-->base
-                new OwnSplit(),
-                new OwnSplitStringGetters(),
-                new OwnSplitDoubleParser(),
-                new OwnSplitDoubleActiveParser(),
-                new OwnSplitDoubleActiveParserStaticWorkingArray(),
-                new OwnSplitDoubleActiveParserIndexBased()
+//                new Simple(), //-->base
+//                new OwnSplit(),
+//                new OwnSplitStringGetters(),
+//                new OwnSplitDoubleParser(),
+//                new OwnSplitDoubleActiveParser(),
+//                new OwnSplitDoubleActiveParserStaticWorkingArray(),
+//                new OwnSplitDoubleActiveParserIndexBased(),
+//                new OwnSplitDoubleActiveParserIndexBasedHashFun(),
+                new OwnSplitDoubleActiveParserIndexBasedLimitedHashFun()
         );
 
         var mapping = new LinkedHashMap<String, Long>(runners.size());
