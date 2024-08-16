@@ -22,7 +22,7 @@ public class OwnSplitDoubleActiveParserIndexBased implements Runner {
             stream.filter(line -> !line.startsWith("#")).forEach(this::processLine);
         }
         stations.forEach((k, v) -> {
-            System.out.printf("%s;%s;%s;%s;\n", k, (1.0 * v.all / v.count) / 1000, v.max / 1000, v.min / 1000);
+            System.out.printf("%s;%s;%s;%s;\n", k, (1.0 * v.all / v.count) / 10000, v.max / 10000.0, v.min / 10000.0);
         });
     }
 
