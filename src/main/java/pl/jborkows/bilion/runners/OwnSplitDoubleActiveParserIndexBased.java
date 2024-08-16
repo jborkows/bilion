@@ -32,11 +32,6 @@ public class OwnSplitDoubleActiveParserIndexBased implements Runner {
     long scaler = 1;
     boolean dot = false;
 
-    /*
-    TODO
-    check if can use table before dot long[2] filled in same order
-    and long[4] filled in "reverse" order and have single big calculation
-     */
     private void processLine(String line) {
         var stationName = "";
         var index = 0;
