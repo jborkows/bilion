@@ -38,7 +38,7 @@ public class OwnSplitDoubleActiveParserIndexBasedLimitedHashFun implements Runne
         stations.forEach((_k, pair) -> {
             var k = pair.name;
             var v = pair.station;
-            System.out.printf("%s;%s;%s;%s;\n", k, (1.0 * v.all / v.count) / 1000, v.max / 1000, v.min / 1000);
+            System.out.printf("%s;%s;%s;%s;\n", k, (1.0 * v.all / v.count) / 10000, 1.0 * v.max / 10000, 1.0* v.min / 10000);
         });
     }
 
@@ -123,16 +123,14 @@ public class OwnSplitDoubleActiveParserIndexBasedLimitedHashFun implements Runne
     }
 
     private final AtomicInteger atomicInteger = new AtomicInteger(0);
-    private final boolean[] usedLengths = new boolean[30];
-    private final Map<Integer, Map<Integer, List<NameWithHash>>> complexHashing = new HashMap<>(usedLengths.length);
+    private final Map<Integer, List<NameWithHash>> complexHashing = new HashMap<>();
 
     private Station getStation(String stationName) {
         var letters = stationName.toCharArray();
-        var firstLevel = firstLevelCache(letters);
-        var secondLevel = secondLevelCache(letters, firstLevel);
+        var secondLevel = levelCache(letters);
         int funHash = complexHash(secondLevel, stationName);
 
-        if(!stations.containsKey(funHash)) {
+        if (!stations.containsKey(funHash)) {
             stations.put(funHash, new Container(stationName, funHash));
         }
         var container = stations.get(funHash);
@@ -142,21 +140,19 @@ public class OwnSplitDoubleActiveParserIndexBasedLimitedHashFun implements Runne
         return container.station;
     }
 
-    private static List<NameWithHash> secondLevelCache(char[] letters, Map<Integer, List<NameWithHash>> firstLevel) {
-        var secondLevelCacheKey= letters[0]+ letters[1]+ letters[2];
-        if(!firstLevel.containsKey(secondLevelCacheKey)){
-            firstLevel.put(secondLevelCacheKey, new ArrayList<>());
+    private List<NameWithHash> levelCache(char[] letters) {
+        var key = keyFrom(letters);
+        var result = complexHashing.get(key);
+        if (result != null) {
+            return result;
         }
-        return firstLevel.get(secondLevelCacheKey);
+        var created = new ArrayList<NameWithHash>(2);
+        complexHashing.put(key, created);
+        return created;
     }
 
-    private Map<Integer, List<NameWithHash>> firstLevelCache(char[] letters) {
-        var length = letters.length;
-        if(!usedLengths[length]) {
-            complexHashing.put(length, new HashMap<>(10));
-            usedLengths[length]=true;
-        }
-        return complexHashing.get(length);
+    private static int keyFrom(char[] letters) {
+        return letters[0] * 31 + letters[1] * 15;
     }
 
     private int complexHash(List<NameWithHash> secondLevel, String stationName) {

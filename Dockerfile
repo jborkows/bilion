@@ -12,5 +12,6 @@ COPY ./src/main/resources/weather_stations.csv /app/stations.csv
 # Set the working directory
 WORKDIR /app
 RUN mvn package
+RUN echo "DONE"
 CMD ["java", "-jar", "/app/target/bilion-1.0-SNAPSHOT.jar", "/reference/measurements.txt"]
 
