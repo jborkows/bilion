@@ -46,11 +46,7 @@ public class OwnSplit implements Runner{
         station.all += value;
         station.count += 1;
         station.max = Math.max(station.max, value);
-        station.min = Math.min(station.max, value);
+        station.min = Math.min(station.min, value);
     }
 
-    @Override
-    public String name() {
-        return "Simple";
-    }
 }

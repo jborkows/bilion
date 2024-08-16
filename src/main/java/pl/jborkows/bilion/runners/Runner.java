@@ -4,5 +4,7 @@ import java.nio.file.Path;
 
 public interface Runner {
     void process(Path path) throws Exception;
-    String name();
+    default String name(){
+        return this.getClass().getSimpleName();
+    };
 }

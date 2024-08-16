@@ -35,8 +35,4 @@ public class Simple implements Runner{
         });
     }
 
-    @Override
-    public String name() {
-        return "Simple";
-    }
 }

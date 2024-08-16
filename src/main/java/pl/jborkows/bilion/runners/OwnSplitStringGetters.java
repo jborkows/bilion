@@ -48,8 +48,4 @@ public class OwnSplitStringGetters implements Runner{
         station.min = Math.min(station.max, value);
     }
 
-    @Override
-    public String name() {
-        return "Simple";
-    }
 }
