@@ -46,13 +46,15 @@ public class OwnSplitDoubleActiveParser implements Runner {
         dot = false;
 
         char[] charArray = line.toCharArray();
+        int runningIndex=0;
         for (char c : charArray) {
             if (c == ';') {
-                stationName = line.substring(0, index);
+                stationName = line.substring(0, runningIndex);
                 parseNumber=true;
                 continue;
             }
             if(!parseNumber){
+                runningIndex++;
                 continue;
             }
             if(dot){
