@@ -21,7 +21,7 @@ public class Main {
 //                new OwnSplitDoubleParser(),
 //                new OwnSplitDoubleActiveParser(),
 //                new OwnSplitDoubleActiveParserStaticWorkingArray(),
-//                new OwnSplitDoubleActiveParserIndexBased(),
+                new OwnSplitDoubleActiveParserIndexBased(),
 //                new OwnSplitDoubleActiveParserIndexBasedHashFun(),
                 new OwnSplitDoubleActiveParserIndexBasedLimitedHashFun()
         );

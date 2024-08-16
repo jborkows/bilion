@@ -28,29 +28,6 @@ public class OwnSplitDoubleActiveParserIndexBasedLimitedHashFun implements Runne
 
     }
 
-    private static class Pair {
-        private final String name;
-        private final Station station;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            Pair pair = (Pair) o;
-            return Objects.equals(name, pair.name);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hashCode(name);
-        }
-
-        private Pair(String name, Station station) {
-            this.name = name;
-            this.station = station;
-        }
-    }
-
     private final Map<Integer, Container> stations = new HashMap<>();
 
     @Override
@@ -68,16 +45,13 @@ public class OwnSplitDoubleActiveParserIndexBasedLimitedHashFun implements Runne
     long number = 0;
     boolean parseNumber = false;
     boolean minus = false;
-    long scaler = 1;
     boolean dot = false;
 
     private void processLine(String line) {
         var stationName = "";
-        var index = 0;
         number = 0;
         parseNumber = false;
         minus = false;
-        scaler = 1;
         dot = false;
         int firstNumberIndex = 0, lastNumberIndex = 0, decimalIndex = 0, decimalIndexEnd = 0;
 
@@ -149,20 +123,40 @@ public class OwnSplitDoubleActiveParserIndexBasedLimitedHashFun implements Runne
     }
 
     private final AtomicInteger atomicInteger = new AtomicInteger(0);
-    private final Map<Integer, Map<Character, List<NameWithHash>>> complexHashing = new HashMap<>();
+    private final boolean[] usedLengths = new boolean[30];
+    private final Map<Integer, Map<Integer, List<NameWithHash>>> complexHashing = new HashMap<>(usedLengths.length);
 
     private Station getStation(String stationName) {
-        var firstLetter = stationName.charAt(0);
-        var firstLevel = complexHashing.computeIfAbsent(stationName.length(), any -> new HashMap<>());
-        var secondLevel = firstLevel.computeIfAbsent(firstLetter, k -> new ArrayList<>());
-
+        var letters = stationName.toCharArray();
+        var firstLevel = firstLevelCache(letters);
+        var secondLevel = secondLevelCache(letters, firstLevel);
         int funHash = complexHash(secondLevel, stationName);
 
-        var container = stations.computeIfAbsent(funHash, (_a) -> new Container(stationName, funHash));
+        if(!stations.containsKey(funHash)) {
+            stations.put(funHash, new Container(stationName, funHash));
+        }
+        var container = stations.get(funHash);
         if (!stationName.equals(container.name)) {
             throw new IllegalStateException("Station name mismatch was " + container.name + " got " + stationName + " " + container.funHash + "->" + funHash);
         }
         return container.station;
+    }
+
+    private static List<NameWithHash> secondLevelCache(char[] letters, Map<Integer, List<NameWithHash>> firstLevel) {
+        var secondLevelCacheKey= letters[0]+ letters[1]+ letters[2];
+        if(!firstLevel.containsKey(secondLevelCacheKey)){
+            firstLevel.put(secondLevelCacheKey, new ArrayList<>());
+        }
+        return firstLevel.get(secondLevelCacheKey);
+    }
+
+    private Map<Integer, List<NameWithHash>> firstLevelCache(char[] letters) {
+        var length = letters.length;
+        if(!usedLengths[length]) {
+            complexHashing.put(length, new HashMap<>(10));
+            usedLengths[length]=true;
+        }
+        return complexHashing.get(length);
     }
 
     private int complexHash(List<NameWithHash> secondLevel, String stationName) {
