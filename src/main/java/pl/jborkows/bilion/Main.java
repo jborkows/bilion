@@ -15,7 +15,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
         var path = extractPath(args);
         List<Runner> runners = List.of(
-//                new Simple(), //-->base
+                new Simple(), //-->base
 //                new OwnSplit(),
 //                new OwnSplitStringGetters(),
 //                new OwnSplitDoubleParser(),
@@ -23,7 +23,8 @@ public class Main {
 //                new OwnSplitDoubleActiveParserStaticWorkingArray(),
                 new OwnSplitDoubleActiveParserIndexBased(),
 //                new OwnSplitDoubleActiveParserIndexBasedHashFun(),
-                new OwnSplitDoubleActiveParserIndexBasedLimitedHashFun()
+//                new OwnSplitDoubleActiveParserIndexBasedLimitedHashFun(),
+                new OwnSplitDoubleActiveParserIndexBasedTwoThreads()
         );
 
         var mapping = new LinkedHashMap<String, Long>(runners.size());
