@@ -33,13 +33,14 @@ public class Main {
 //                new OwnSplitDoubleActiveParserIndexBasedMultipleThreadsNoWork(32, 2),
 //                new OwnSplitDoubleActiveParserIndexBasedMultipleThreadsNoWork(64, 2),
 //                new OwnSplitDoubleActiveParserIndexBasedMultipleThreadsNoWork(128, 2),
-                new ReadBytesSync(256)
-//                new OwnSplitDoubleActiveParserIndexBasedMultipleThreadsNoWork(-1, 2)
+//                new ReadBytesSync(256),
+new ReadBytesSync2nd()
         );
 
         var mapping = new LinkedHashMap<String, Long>(runners.size());
         for (Runner runner : runners) {
             var miliseconds = meat(runner, path);
+            System.out.println("Meet " + miliseconds/1000.0 + " seconds for " + runner.name());
             mapping.put(runner.name(), miliseconds);
         }
         System.out.println("##################");

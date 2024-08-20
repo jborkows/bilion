@@ -1,1 +1,4 @@
-src/main/resources/big_data.txt
+data/big_data.txt
+src/main/resources/*.txt
+./src/main/resources/*.txt
+Dockerfile
