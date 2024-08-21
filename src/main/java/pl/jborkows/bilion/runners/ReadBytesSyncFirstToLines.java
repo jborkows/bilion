@@ -7,9 +7,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ReadBytesSyncFirstToLines implements Runner {
@@ -25,7 +23,16 @@ public class ReadBytesSyncFirstToLines implements Runner {
 
     private final Map<NumericNamed, Station> stations = new HashMap<>();
     private final AtomicInteger count = new AtomicInteger();
-    private final ExecutorService executor = Executors.newFixedThreadPool(
+
+    private final ThreadPoolExecutor linesProcessors = new ThreadPoolExecutor(
+            6,
+            10,
+            10,
+            TimeUnit.MILLISECONDS,
+            new ArrayBlockingQueue<>(5000),
+            r -> new Thread(r, "Lines-" + count.incrementAndGet())
+    );
+    private final ExecutorService processors = Executors.newFixedThreadPool(
             Runtime.getRuntime().availableProcessors(),
             r -> new Thread(r, "Processor-" + count.incrementAndGet())
     );
@@ -34,95 +41,130 @@ public class ReadBytesSyncFirstToLines implements Runner {
     @Override
     public void process(Path path) throws Exception {
 
-        final int bufferSize = 16*1024 ;
-        Parser parser = textParser;
+        final int bufferSize = 16 * 1024;
         try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(path.toFile()));) {
-            byte[] buffer = new byte[bufferSize+1*1024];
+            byte[] buffer = new byte[bufferSize + 1 * 1024];
             int bytesRead;
             int offset = 0;
             byte[] offsetBytes = new byte[1024];
-            var linesCount = 0;
             while ((bytesRead = bis.read(buffer, offset, bufferSize)) != -1) {
-                var countInsideBuffer = 0;
-                var lastNewLineRead=0;
+                var lastNewLineIndex = 0;
                 var index = 0;
-                if(offset > 0){
+                if (offset > 0) {
                     System.arraycopy(offsetBytes, 0, buffer, 0, offset);
                 }
-
-
-                System.out.println(linesCount + ": buffer -> " + new String(buffer, StandardCharsets.UTF_8).substring(0,50));
-
+                var countLines = 0;
                 for (byte b : buffer) {
                     index++;
-                    if(b == '\n'){
-                        lastNewLineRead=index;
-                        linesCount++;
-                        countInsideBuffer++;
+                    if (b == '\n') {
+                        lastNewLineIndex = index;
+                        countLines++;
                     }
-                    if(index >= bytesRead+offset){
+                    if (index >= bytesRead + offset) {
                         break;
                     }
                 }
-                var lines = new byte[lastNewLineRead];
-                System.arraycopy(buffer, 0, lines, 0, lastNewLineRead);
-//                if(index == bytesRead+offset){
-//                    continue;
-//                }
-                var newoffset = (bytesRead + offset) - lastNewLineRead;
-                if(newoffset > 0){
-                    System.arraycopy(buffer, lastNewLineRead, offsetBytes, 0, newoffset);
-                    System.out.println("newoffset -> " + new String(Arrays.copyOf(offsetBytes,newoffset), StandardCharsets.UTF_8));
+                var lines = new byte[lastNewLineIndex];
+                var count = countLines;
+                while (true) {
+                    try {
+                        linesProcessors.execute(() -> processNewLines(lines, count));
+                        break;
+                    } catch (RejectedExecutionException e) {
+                        TimeUnit.MICROSECONDS.sleep(10);
+                    }
                 }
-                System.out.println("$$$$$$$$$$$$$$$$$$");
-//                System.out.println(new String(lines, StandardCharsets.UTF_8));
-                System.out.println("$$$$$$$$$$$$$$$$$$");
-                offset=newoffset;
+                System.arraycopy(buffer, 0, lines, 0, lastNewLineIndex);
+                var newoffset = (bytesRead + offset) - lastNewLineIndex;
+                if (newoffset > 0) {
+                    System.arraycopy(buffer, lastNewLineIndex, offsetBytes, 0, newoffset);
+                }
+                offset = newoffset;
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
         System.out.println("Read everything");
-        executor.shutdown();
-        executor.awaitTermination(2, TimeUnit.MINUTES);
+        linesProcessors.shutdown();
+        linesProcessors.awaitTermination(1, TimeUnit.MINUTES);
+        processors.shutdown();
+        processors.awaitTermination(2, TimeUnit.MINUTES);
         joiner.shutdown();
         joiner.awaitTermination(2, TimeUnit.MINUTES);
 
         stations.forEach((k, v) -> {
-            System.out.printf("%s;%s;%s;%s;\n", new String(k.name, StandardCharsets.UTF_8), (1.0 * v.all / v.count) / 100, v.max / 100.0, v.min / 100.0);
+            System.out.printf("%s;%s;%s;%s;\n", k.name(), (1.0 * v.all / v.count) / 100, v.max / 100.0, v.min / 100.0);
         });
     }
 
+    private void processNewLines(byte[] lines, int totalNumberOfLines) {
+        int i = 0;
+        int beginWord = 0;
+        int endWord = 0;
+        int beginNumber = 0;
+        List<LineOperator> operators = new ArrayList<>(totalNumberOfLines);
+        for (byte b : lines) {
+            if (b == ';') {
+                endWord = i - 1;
+                beginNumber = i + 1;
+            } else if (b == '\n') {
+                var endNumber = i - 1;
+                if (beginWord > endWord) {
+                    System.out.println(Thread.currentThread().getName() + " At index failure " + i);
+                    System.out.println(beginWord + "->" + endWord);
+                    System.out.println(new String(Arrays.copyOfRange(lines, beginWord, beginWord + 30), StandardCharsets.UTF_8));
+                    System.out.println("#####");
+                    System.out.println(new String(Arrays.copyOfRange(lines, endNumber, endNumber + 30), StandardCharsets.UTF_8));
+                }else {
+                    operators.add(new LineOperator(lines, beginWord, endWord, beginNumber, endNumber));
+                }
 
-    public interface Parser {
-        Parser parse(byte b);
-    }
-
-    private byte[] temporalName;
-    private List<NamedStation> namedStations;
-
-    private void addName(byte[] name) {
-        temporalName = name;
-    }
-
-    private void addNumber(byte[] name) {
-        if (namedStations == null) {
-            namedStations = new ArrayList<>(NAMED_STATIONS_BUFFER);
+                beginWord = i + 1;
+            }
+            i++;
         }
-        namedStations.add(new NamedStation(temporalName, name));
-        if (namedStations.size() == NAMED_STATIONS_BUFFER) {
-            var temp = namedStations;
-            namedStations = null;
-            executor.submit(() -> {
-                processNamedStations(temp);
-            });
+        processors.execute(() -> processNamedStations(operators));
+    }
+
+
+    record LineOperator(byte[] data, int beginWord, int endWord, int beginNumber, int endNumber) {
+        public NumericNamed asNumericNamed() {
+            var number = value();
+            var hash = hashFor();
+            return new NumericNamed(data, beginWord, endWord, number, hash);
+        }
+
+        private int hashFor() {
+            var sum = 0;
+            for (int i = beginWord; i < endWord + 1; i++) {
+                sum = (data[i] + sum) * 31;
+            }
+            return sum;
+        }
+
+        private int value() {
+            boolean minus = data[beginNumber] == '-';
+            int numberIndexStart = minus ? 1 : 0;
+            int wholeNumber = 0;
+            int i = numberIndexStart + beginNumber;
+            for (; i < endNumber + 1; i++) {
+                if (data[i] == '.') {
+                    break;
+                }
+                var parsed = parse(data[i]);
+                wholeNumber = 10 * wholeNumber + parsed;
+            }
+            var decimal = parse(data[endNumber]);
+            var number = (minus ? -1 : 1) * (wholeNumber * 10 + decimal);
+            return number;
         }
     }
 
-    private void processNamedStations(List<NamedStation> stations) {
+
+    private void processNamedStations(List<LineOperator> stations) {
         List<NumericNamed> numericNameds = new ArrayList<>(stations.size());
-        for (NamedStation station : stations) {
+        for (var station : stations) {
             numericNameds.add(station.asNumericNamed());
         }
         joiner.submit(() -> joinValues(numericNameds));
@@ -130,80 +172,21 @@ public class ReadBytesSyncFirstToLines implements Runner {
 
     private void joinValues(List<NumericNamed> numericNames) {
         for (NumericNamed numericName : numericNames) {
-            stations.compute(numericName, (n, s) -> stationFor(numericName, s));
+            if (!stations.containsKey(numericName)) {
+                var newValue = numericName.persist();
+                stations.put(newValue, stationFor(numericName, new Station()));
+            } else {
+                stations.computeIfPresent(numericName, ReadBytesSyncFirstToLines::stationFor);
+            }
         }
     }
 
     private static Station stationFor(NumericNamed numericName, Station s) {
-        if (s == null) {
-            s = new Station();
-        }
         s.all += numericName.value;
         s.count++;
         s.max = Math.max(s.max, numericName.value);
         s.min = Math.min(s.min, numericName.value);
         return s;
-    }
-
-
-    private final byte[] name = new byte[4096];
-    private final TextParser textParser = new TextParser();
-    private final NumberParser numberParser = new NumberParser();
-
-    public class TextParser implements Parser {
-        private int nameLength = 0;
-
-        @Override
-        public Parser parse(byte b) {
-            if (b == 0) {
-                return this;
-            } else if (b == ';') {
-                prepareSwitching();
-                return numberParser.fresh();
-            } else {
-                appendName(b);
-                return this;
-            }
-        }
-
-        private void prepareSwitching() {
-            byte[] copied = new byte[nameLength];
-            System.arraycopy(name, 0, copied, 0, nameLength);
-            addName(copied);
-        }
-
-        private void appendName(byte b) {
-            name[nameLength++] = b;
-        }
-
-        public Parser fresh() {
-            nameLength = 0;
-            return this;
-        }
-    }
-
-    public class NumberParser implements Parser {
-        private int nameLength = 0;
-
-        @Override
-        public Parser parse(byte b) {
-            if (b == 0) {
-                return this;
-            } else if (b == '\n') {
-                byte[] copied = new byte[nameLength];
-                System.arraycopy(name, 0, copied, 0, nameLength);
-                addNumber(copied);
-                return textParser.fresh();
-            } else {
-                name[nameLength++] = b;
-                return this;
-            }
-        }
-
-        public Parser fresh() {
-            nameLength = 0;
-            return this;
-        }
     }
 
     private static int parse(byte c) {
@@ -215,80 +198,21 @@ public class ReadBytesSyncFirstToLines implements Runner {
         return this.getClass().getName();
     }
 
-    private static final class NamedStation {
-        final byte[] name;
-        final byte[] value;
-        private final int hash;
-
-        private NamedStation(byte[] name, byte[] value) {
-            this.name = name;
-            this.value = value;
-            this.hash = Arrays.hashCode(name);
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            NamedStation that = (NamedStation) o;
-            return Objects.equals(hash, that.hash);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hashCode(hash);
-        }
-
-        @Override
-        public String toString() {
-            return "NamedStation{" +
-                    "name=" + new String(name, StandardCharsets.UTF_8) +
-                    ", value=" + new String(value, StandardCharsets.UTF_8) +
-                    ", hash=" + hash +
-                    '}';
-        }
-
-        NumericNamed asNumericNamed() {
-            boolean minus = value[0] == '-';
-            int numberIndexStart = minus ? 1 : 0;
-            int wholeNumber = 0;
-            int i = numberIndexStart;
-            for (; i < value.length; i++) {
-                if (value[i] == '.') {
-                    break;
-                }
-                var parsed = parse(value[i]);
-                wholeNumber = 10 * wholeNumber + parsed;
-            }
-            var decimal = parse(value[value.length - 1]);
-            var number = (minus ? -1 : 1) * (wholeNumber * 10 + decimal);
-            return new NumericNamed(name, number, hash);
-        }
-    }
-
-
     private static final class NumericNamed {
-        private final byte[] name;
+        private final byte[] data;
+        private final int beginWord;
+        private final int endWord;
         private final int value;
         private final int hash;
 
-        private NumericNamed(byte[] name, int value, int hash) {
-            this.name = name;
+        private NumericNamed(byte[] data, int beginWord, int endWord, int value, int hash) {
+            this.data = data;
+            this.beginWord = beginWord;
+            this.endWord = endWord;
             this.value = value;
             this.hash = hash;
         }
 
-        public byte[] name() {
-            return name;
-        }
-
-        public long value() {
-            return value;
-        }
-
-        public int hash() {
-            return hash;
-        }
 
         @Override
         public boolean equals(Object obj) {
@@ -306,9 +230,23 @@ public class ReadBytesSyncFirstToLines implements Runner {
         @Override
         public String toString() {
             return "NumericNamed[" +
-                    "name=" + new String(name, StandardCharsets.UTF_8) + ", " +
+                    "name=" + name() + ", " +
                     "value=" + value + ", " +
                     "hash=" + hash + ']';
+        }
+
+        NumericNamed persist() {
+            var name = Arrays.copyOfRange(data, beginWord, endWord + 1);
+
+            var sum = 0;
+            for (int i = beginWord; i < endWord + 1; i++) {
+                sum = (data[i] + sum) * 31;
+            }
+            return new NumericNamed(name, 0, name.length - 1, value, sum);
+        }
+
+        public String name() {
+            return new String(Arrays.copyOfRange(data, beginWord, endWord + 1), StandardCharsets.UTF_8);
         }
 
     }
