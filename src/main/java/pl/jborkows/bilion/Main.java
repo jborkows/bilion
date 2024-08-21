@@ -34,7 +34,8 @@ public class Main {
 //                new OwnSplitDoubleActiveParserIndexBasedMultipleThreadsNoWork(64, 2),
 //                new OwnSplitDoubleActiveParserIndexBasedMultipleThreadsNoWork(128, 2),
 //                new ReadBytesSync(256),
-new ReadBytesSync2nd()
+//new ReadBytesSync2nd(),
+                new ReadBytesSyncFirstToLines()
         );
 
         var mapping = new LinkedHashMap<String, Long>(runners.size());
