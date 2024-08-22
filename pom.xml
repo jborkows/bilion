@@ -44,7 +44,7 @@
         <configuration>
           <archive>
             <manifest>
-              <addClasspath>true</addClasspath>
+              <addClasspath>false</addClasspath>
               <mainClass>pl.jborkows.bilion.Main</mainClass> <!-- Replace with your package and class name -->
             </manifest>
           </archive>

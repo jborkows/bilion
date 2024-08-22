@@ -6,10 +6,9 @@ RUN mvn verify
 RUN ./create_measurements.sh 1000000000
 
 FROM maven:3.9.8-amazoncorretto-21-debian-bookworm as maven
-COPY ./src /app
-COPY ./pom.xml /app
+COPY . /app
 WORKDIR /app
-RUN mvn package -DskipTests
+RUN mvn package
 RUN echo "DONE"
 
 FROM  ghcr.io/graalvm/native-image-community:22 as graalvm
