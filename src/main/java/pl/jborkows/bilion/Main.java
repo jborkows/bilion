@@ -15,25 +15,25 @@ public class Main {
     public static void main(String[] args) throws Exception {
         var path = extractPath(args);
         List<Runner> runners = List.of(
-//                new Simple(), //-->base
-//                new OwnSplit(),
+                new Simple(), //-->base
+                new OwnSplit(),
 //                new OwnSplitStringGetters(),
 //                new OwnSplitDoubleParser(),
-//                new OwnSplitDoubleActiveParser(),
-//                new OwnSplitDoubleActiveParserStaticWorkingArray(),
-//                new OwnSplitDoubleActiveParserIndexBased(),
+                new OwnSplitDoubleActiveParser(),
+                new OwnSplitDoubleActiveParserStaticWorkingArray(),
+                new OwnSplitDoubleActiveParserIndexBased(),
 //                new OwnSplitDoubleActiveParserIndexBasedHashFun(),
 //                new OwnSplitDoubleActiveParserIndexBasedLimitedHashFun(),
-//                new OwnSplitDoubleActiveParserIndexBasedTwoThreads(),
-//                new OwnSplitDoubleActiveParserIndexBasedMultipleThreads(1),
+                new OwnSplitDoubleActiveParserIndexBasedTwoThreads(),
+                new OwnSplitDoubleActiveParserIndexBasedMultipleThreads(1),
 //        new OwnSplitDoubleActiveParserIndexBasedMultipleThreads(2),
-//        new OwnSplitDoubleActiveParserIndexBasedMultipleThreads(3),
+        new OwnSplitDoubleActiveParserIndexBasedMultipleThreads(3),
 //                new OwnSplitDoubleActiveParserIndexBasedMultipleThreadsNoWork(4, 2)
 //                new OwnSplitDoubleActiveParserIndexBasedMultipleThreadsNoWork(16, 2),
 //                new OwnSplitDoubleActiveParserIndexBasedMultipleThreadsNoWork(32, 2),
 //                new OwnSplitDoubleActiveParserIndexBasedMultipleThreadsNoWork(64, 2),
 //                new OwnSplitDoubleActiveParserIndexBasedMultipleThreadsNoWork(128, 2),
-//                new ReadBytesSync(256),
+                new ReadBytesSync(256),
 //new ReadBytesSync2nd(),
                 new ReadBytesSyncFirstToLines()
         );

@@ -8,9 +8,8 @@ RUN ./create_measurements.sh 1000000000
 FROM maven:3.9.8-amazoncorretto-21-debian-bookworm as maven
 COPY ./src /app
 COPY ./pom.xml /app
-COPY ./src/main/resources/weather_stations.csv /app/stations.csv
 WORKDIR /app
-RUN mvn package
+RUN mvn package -DskipTests
 RUN echo "DONE"
 
 FROM  ghcr.io/graalvm/native-image-community:22 as graalvm

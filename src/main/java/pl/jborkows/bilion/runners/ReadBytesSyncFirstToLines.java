@@ -1,27 +1,28 @@
 package pl.jborkows.bilion.runners;
 
 
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ReadBytesSyncFirstToLines implements Runner {
 
-    public static final int NAMED_STATIONS_BUFFER = 1000;
 
     private static class Station {
+        public String name;
+        public int hash;
         int max = Integer.MIN_VALUE;
         int min = Integer.MAX_VALUE;
         long all = 0;
         int count = 0;
     }
 
-    private final Map<NumericNamed, Station> stations = new HashMap<>();
+    private final Map<Integer, Station> stations = new HashMap<>();
     private final AtomicInteger count = new AtomicInteger();
 
     private final ThreadPoolExecutor linesProcessors = new ThreadPoolExecutor(
@@ -29,7 +30,7 @@ public class ReadBytesSyncFirstToLines implements Runner {
             10,
             10,
             TimeUnit.MILLISECONDS,
-            new ArrayBlockingQueue<>(5000),
+            new ArrayBlockingQueue<>(4000),
             r -> new Thread(r, "Lines-" + count.incrementAndGet())
     );
     private final ExecutorService processors = Executors.newFixedThreadPool(
@@ -66,15 +67,16 @@ public class ReadBytesSyncFirstToLines implements Runner {
                 }
                 var lines = new byte[lastNewLineIndex];
                 var count = countLines;
+                System.arraycopy(buffer, 0, lines, 0, lastNewLineIndex);
                 while (true) {
                     try {
                         linesProcessors.execute(() -> processNewLines(lines, count));
+//                        processNewLines(lines, count);
                         break;
                     } catch (RejectedExecutionException e) {
                         TimeUnit.MICROSECONDS.sleep(10);
                     }
                 }
-                System.arraycopy(buffer, 0, lines, 0, lastNewLineIndex);
                 var newoffset = (bytesRead + offset) - lastNewLineIndex;
                 if (newoffset > 0) {
                     System.arraycopy(buffer, lastNewLineIndex, offsetBytes, 0, newoffset);
@@ -94,37 +96,47 @@ public class ReadBytesSyncFirstToLines implements Runner {
         joiner.awaitTermination(2, TimeUnit.MINUTES);
 
         stations.forEach((k, v) -> {
-            System.out.printf("%s;%s;%s;%s;\n", k.name(), (1.0 * v.all / v.count) / 100, v.max / 100.0, v.min / 100.0);
+            System.out.printf("%s;%s;%s;%s;\n", v.name , (1.0 * v.all / v.count) / 100, v.max / 100.0, v.min / 100.0);
         });
     }
 
     private void processNewLines(byte[] lines, int totalNumberOfLines) {
-        int i = 0;
+        List<LineOperator> operators = lineOperatorsFrom(lines, totalNumberOfLines);
+        processors.execute(() -> processNamedStations(operators));
+    }
+
+     static List<LineOperator> lineOperatorsFrom(byte[] lines, int totalNumberOfLines) {
         int beginWord = 0;
         int endWord = 0;
         int beginNumber = 0;
         List<LineOperator> operators = new ArrayList<>(totalNumberOfLines);
-        for (byte b : lines) {
+        int numberOfLine = 0;
+        for (int i = 0, linesLength = lines.length; i < linesLength; i++) {
+            byte b = lines[i];
             if (b == ';') {
                 endWord = i - 1;
                 beginNumber = i + 1;
             } else if (b == '\n') {
                 var endNumber = i - 1;
+                numberOfLine++;
                 if (beginWord > endWord) {
-                    System.out.println(Thread.currentThread().getName() + " At index failure " + i);
+                    System.out.println(Thread.currentThread().getName() + " At index failure " + i + " " + numberOfLine);
                     System.out.println(beginWord + "->" + endWord);
-                    System.out.println(new String(Arrays.copyOfRange(lines, beginWord, beginWord + 30), StandardCharsets.UTF_8));
-                    System.out.println("#####");
-                    System.out.println(new String(Arrays.copyOfRange(lines, endNumber, endNumber + 30), StandardCharsets.UTF_8));
-                }else {
+                    AtomicInteger atomicInteger = new AtomicInteger(1);
+                    try {
+                        Files.write(Paths.get("aaa.out"), Arrays.copyOf(lines, i));
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    System.exit(-1);
+                } else {
                     operators.add(new LineOperator(lines, beginWord, endWord, beginNumber, endNumber));
                 }
 
                 beginWord = i + 1;
             }
-            i++;
         }
-        processors.execute(() -> processNamedStations(operators));
+        return operators;
     }
 
 
@@ -172,21 +184,22 @@ public class ReadBytesSyncFirstToLines implements Runner {
 
     private void joinValues(List<NumericNamed> numericNames) {
         for (NumericNamed numericName : numericNames) {
-            if (!stations.containsKey(numericName)) {
-                var newValue = numericName.persist();
-                stations.put(newValue, stationFor(numericName, new Station()));
-            } else {
-                stations.computeIfPresent(numericName, ReadBytesSyncFirstToLines::stationFor);
+            Station station = stations.get(numericName.hash);
+            if(station == null){
+                station = new Station();
+                station.name = numericName.name();
+                station.hash = numericName.hash;
+                stations.put(numericName.hash, station);
             }
+            stationFor(numericName, station);
         }
     }
 
-    private static Station stationFor(NumericNamed numericName, Station s) {
+    private static void stationFor(NumericNamed numericName, Station s) {
         s.all += numericName.value;
         s.count++;
         s.max = Math.max(s.max, numericName.value);
         s.min = Math.min(s.min, numericName.value);
-        return s;
     }
 
     private static int parse(byte c) {
@@ -233,16 +246,6 @@ public class ReadBytesSyncFirstToLines implements Runner {
                     "name=" + name() + ", " +
                     "value=" + value + ", " +
                     "hash=" + hash + ']';
-        }
-
-        NumericNamed persist() {
-            var name = Arrays.copyOfRange(data, beginWord, endWord + 1);
-
-            var sum = 0;
-            for (int i = beginWord; i < endWord + 1; i++) {
-                sum = (data[i] + sum) * 31;
-            }
-            return new NumericNamed(name, 0, name.length - 1, value, sum);
         }
 
         public String name() {
