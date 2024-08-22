@@ -2,7 +2,9 @@ package pl.jborkows.bilion;
 
 import pl.jborkows.bilion.runners.*;
 
+import java.io.File;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -17,35 +19,38 @@ public class Main {
         List<Runner> runners = List.of(
                 new Simple(), //-->base
                 new OwnSplit(),
-//                new OwnSplitStringGetters(),
-//                new OwnSplitDoubleParser(),
+                new OwnSplitStringGetters(),
+                new OwnSplitDoubleParser(),
                 new OwnSplitDoubleActiveParser(),
                 new OwnSplitDoubleActiveParserStaticWorkingArray(),
                 new OwnSplitDoubleActiveParserIndexBased(),
-//                new OwnSplitDoubleActiveParserIndexBasedHashFun(),
-//                new OwnSplitDoubleActiveParserIndexBasedLimitedHashFun(),
+                new OwnSplitDoubleActiveParserIndexBasedHashFun(),
+                new OwnSplitDoubleActiveParserIndexBasedLimitedHashFun(),
                 new OwnSplitDoubleActiveParserIndexBasedTwoThreads(),
                 new OwnSplitDoubleActiveParserIndexBasedMultipleThreads(1),
-//        new OwnSplitDoubleActiveParserIndexBasedMultipleThreads(2),
+        new OwnSplitDoubleActiveParserIndexBasedMultipleThreads(2),
         new OwnSplitDoubleActiveParserIndexBasedMultipleThreads(3),
-//                new OwnSplitDoubleActiveParserIndexBasedMultipleThreadsNoWork(4, 2)
-//                new OwnSplitDoubleActiveParserIndexBasedMultipleThreadsNoWork(16, 2),
-//                new OwnSplitDoubleActiveParserIndexBasedMultipleThreadsNoWork(32, 2),
-//                new OwnSplitDoubleActiveParserIndexBasedMultipleThreadsNoWork(64, 2),
-//                new OwnSplitDoubleActiveParserIndexBasedMultipleThreadsNoWork(128, 2),
                 new ReadBytesSync(256),
-//new ReadBytesSync2nd(),
+new ReadBytesSync2nd(),
                 new ReadBytesSyncFirstToLines()
         );
 
         var mapping = new LinkedHashMap<String, Long>(runners.size());
+
+        var temp = Files.createTempFile("test", "results");
         for (Runner runner : runners) {
             var miliseconds = meat(runner, path);
-            System.out.println("Meet " + miliseconds/1000.0 + " seconds for " + runner.name());
+            String message = "Meet " + miliseconds / 1000.0 + " seconds for " + runner.name();
+            System.out.println(message);
+            Files.writeString(temp,message);
             mapping.put(runner.name(), miliseconds);
         }
         System.out.println("##################");
         mapping.forEach((k, v) -> System.out.println(k + "-> " + v / 60 / 1000 + "m" + ((v / 1000) % 60) + "s " + v % 1000 + "ms"));
+        System.out.println("###################");
+        try(var stream = Files.lines(temp)){
+            stream.forEach(System.out::println);
+        }
 
     }
 

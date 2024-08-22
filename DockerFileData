@@ -1,0 +1,11 @@
+FROM maven:3.9.8-amazoncorretto-21-debian-bookworm as data_preparer
+RUN apt-get update && apt-get install -y git
+RUN git clone https://github.com/gunnarmorling/1brc.git /reference
+WORKDIR /reference
+RUN mvn verify
+RUN ./create_measurements.sh 1000000000
+
+
+FROM  busybox as fun
+COPY --from=data_preparer /reference/measurements.txt /app/data.txt
+ENTRYPOINT mv /app/data.txt /out/data.txt
