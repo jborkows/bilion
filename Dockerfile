@@ -22,8 +22,3 @@ COPY --from=graalvm /home/app/application /app/application
 WORKDIR /app
 ENTRYPOINT  ./application data.txt | grep Meet
 
-FROM  ghcr.io/graalvm/native-image-community:22 as runner_jvm
-COPY --from=data_preparer /reference/measurements.txt /home/app/data.txt
-COPY --from=maven /app/target/*.jar /home/app/application.jar
-WORKDIR /home/app
-ENTRYPOINT java -jar application.jar data.txt
