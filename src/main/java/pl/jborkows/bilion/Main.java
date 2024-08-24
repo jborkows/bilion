@@ -18,22 +18,25 @@ public class Main {
         var path = extractPath(args);
         var prefix = (args.length > 1) ? args[1] : "JVM";
         List<Runner> runners = List.of(
-                new Simple(), //-->base
-                new OwnSplit(),
-                new OwnSplitStringGetters(),
-                new OwnSplitDoubleParser(),
-                new OwnSplitDoubleActiveParser(),
-                new OwnSplitDoubleActiveParserStaticWorkingArray(),
-                new OwnSplitDoubleActiveParserIndexBased(),
-                new OwnSplitDoubleActiveParserIndexBasedHashFun(),
-                new OwnSplitDoubleActiveParserIndexBasedLimitedHashFun(),
-                new OwnSplitDoubleActiveParserIndexBasedTwoThreads(),
-                new OwnSplitDoubleActiveParserIndexBasedMultipleThreads(1),
-                new OwnSplitDoubleActiveParserIndexBasedMultipleThreads(2),
-                new OwnSplitDoubleActiveParserIndexBasedMultipleThreads(3),
-                new ReadBytesSync(256),
-                new ReadBytesSync2nd(),
-                new ReadBytesSyncFirstToLines()
+//                new Simple(), //-->base
+//                new OwnSplit(),
+//                new OwnSplitStringGetters(),
+//                new OwnSplitDoubleParser(),
+//                new OwnSplitDoubleActiveParser(),
+//                new OwnSplitDoubleActiveParserStaticWorkingArray(),
+//                new OwnSplitDoubleActiveParserIndexBased(),
+//                new OwnSplitDoubleActiveParserIndexBasedHashFun(),
+//                new OwnSplitDoubleActiveParserIndexBasedLimitedHashFun(),
+//                new OwnSplitDoubleActiveParserIndexBasedTwoThreads(),
+//                new OwnSplitDoubleActiveParserIndexBasedMultipleThreads(1),
+//                new OwnSplitDoubleActiveParserIndexBasedMultipleThreads(2),
+//                new OwnSplitDoubleActiveParserIndexBasedMultipleThreads(3),
+//                new ReadBytesSync(256),
+//                new ReadBytesSync2nd(),
+                new ReadBytesSyncFirstToLines(),
+                new ReadBytesSyncFirstToLinesCase(),
+//                new ReadBytesSyncFirstToLinesVectors(),
+                new ReadBytesSyncFirstToLinesVectorsLimited()
         );
 
         var mapping = new LinkedHashMap<String, Long>(runners.size());

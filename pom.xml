@@ -7,9 +7,10 @@
   <name>Archetype - bilion</name>
   <url>http://maven.apache.org</url>
   <properties>
-    <maven.compiler.source>21</maven.compiler.source>
-    <maven.compiler.target>21</maven.compiler.target>
+    <maven.compiler.source>22</maven.compiler.source>
+    <maven.compiler.target>22</maven.compiler.target>
     <junit.jupiter.version>5.9.0</junit.jupiter.version>
+    <jmh.version>1.37</jmh.version>
 
   </properties>
   <dependencies>
@@ -25,6 +26,16 @@
       <version>${junit.jupiter.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.openjdk.jmh</groupId>
+      <artifactId>jmh-core</artifactId>
+      <version>${jmh.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.openjdk.jmh</groupId>
+      <artifactId>jmh-generator-annprocess</artifactId>
+      <version>${jmh.version}</version>
+    </dependency>
 
   </dependencies>
   <build>
@@ -34,10 +45,11 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.4.0</version>
         <configuration>
-          <useModulePath>false</useModulePath>
+          <useModulePath>true</useModulePath>
+          <argLine>--enable-preview  --add-modules=jdk.incubator.vector</argLine>
+<!--          <forkCount>0</forkCount>-->
         </configuration>
       </plugin>
-
       <plugin>
         <artifactId>maven-jar-plugin</artifactId>
         <version>3.4.2</version> <!-- Use the latest version available -->
@@ -50,6 +62,17 @@
           </archive>
         </configuration>
       </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.13.0</version> <!-- Ensure this is a version that supports the 'release' attribute -->
+          <configuration>
+            <release>22</release>
+            <compilerArgs>--enable-preview</compilerArgs>
+            <compilerArgs>--add-modules=jdk.incubator.vector</compilerArgs>
+          </configuration>
+        </plugin>
+
     </plugins>
   </build>
 
