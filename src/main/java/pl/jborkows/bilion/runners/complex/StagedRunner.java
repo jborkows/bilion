@@ -19,8 +19,9 @@ public class StagedRunner implements Runner {
         var lineParser = new StepRunner<>("line parser",fileReaderChannel, lineChannel, new LineExtractor());
 
         var finisher = new StepRunner<>("finisher",lineChannel, WriteChannel.none(), continuesWork((chunk, channel) -> {
-            var message = new String(chunk.line, StandardCharsets.UTF_8);
-            System.out.println(message);
+//            var message = new String(chunk.line, StandardCharsets.UTF_8);
+//            System.out.println(message);
+            //NOP
         }));
         finisher.start();
         lineParser.start();

@@ -29,7 +29,7 @@ class StepRunner<MessageIn, MessageOut> extends Thread {
             var value = readChannel.readFrom();
             if(value == null) {
                 if(done){
-                    processor.finish();
+                    processor.finish(writeChannel);
                     return;
                 }
                 try {
@@ -49,7 +49,7 @@ class StepRunner<MessageIn, MessageOut> extends Thread {
 
     interface Processor<MessageIn, MessageOut> {
        void accept(MessageIn messageIn, WriteChannel<MessageOut> writeChannel);
-       void finish();
+       void finish(WriteChannel<MessageOut> writeChannel);
 
        static <In,Out> Processor<In,Out> continuesWork(BiConsumer<In,WriteChannel<Out>> processor) {
            return new Processor<In, Out>() {
@@ -59,7 +59,7 @@ class StepRunner<MessageIn, MessageOut> extends Thread {
                }
 
                @Override
-               public void finish() {
+               public void finish(WriteChannel<Out> writeChannel) {
 
                }
            };
