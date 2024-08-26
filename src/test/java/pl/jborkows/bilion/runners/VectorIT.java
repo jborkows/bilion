@@ -21,7 +21,7 @@ import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Random;
 
-public class VectorTest {
+public class VectorIT {
     static final VectorSpecies<Integer> SPECIES = IntVector.SPECIES_PREFERRED;
 private Path outputPath;
     @BeforeEach
@@ -132,10 +132,10 @@ private Path outputPath;
     @Test
     void addingVectors() throws RunnerException {
         var opt = new OptionsBuilder()
-                .include(VectorTest.Simd.class.getSimpleName())
-                .include(VectorTest.Plain.class.getSimpleName())
+                .include(VectorIT.Simd.class.getSimpleName())
+                .include(VectorIT.Plain.class.getSimpleName())
                 .forks(3)
-                .warmupIterations(5)
+                .warmupIterations(10)
                 .build();
         new Runner(opt).run();
     }

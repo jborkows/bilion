@@ -1,8 +1,8 @@
 package pl.jborkows.bilion;
 
 import pl.jborkows.bilion.runners.*;
+import pl.jborkows.bilion.runners.complex.StagedRunner;
 
-import java.io.File;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,10 +33,9 @@ public class Main {
 //                new OwnSplitDoubleActiveParserIndexBasedMultipleThreads(3),
 //                new ReadBytesSync(256),
 //                new ReadBytesSync2nd(),
-                new ReadBytesSyncFirstToLines(),
-                new ReadBytesSyncFirstToLinesCase(),
-//                new ReadBytesSyncFirstToLinesVectors(),
-                new ReadBytesSyncFirstToLinesVectorsLimited()
+//                new ReadBytesSyncFirstToLines(),
+//                new ReadBytesSyncFirstToLinesCase(),
+                new StagedRunner()
         );
 
         var mapping = new LinkedHashMap<String, Long>(runners.size());
