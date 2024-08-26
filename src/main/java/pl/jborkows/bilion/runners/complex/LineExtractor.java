@@ -24,10 +24,10 @@ class LineExtractor implements StepRunner.Processor<ByteChunkMessage, LineByteCh
                 toSend = new byte[rest.length + i];
                 System.arraycopy(rest, 0, toSend, 0, rest.length);
                 System.arraycopy(chunk, 0, toSend, rest.length, i);
+                writeChannel.writeTo(new LineByteChunkMessage(toSend,0,rest.length+i-1));
             }else {
-                toSend = Arrays.copyOfRange(chunk, begin, i);
+                writeChannel.writeTo(new LineByteChunkMessage(chunk, begin, i-1));
             }
-            writeChannel.writeTo(new LineByteChunkMessage(toSend));
             begin = i + 1;
         }
         rest = Arrays.copyOfRange(chunk, begin, chunk.length);
@@ -35,6 +35,9 @@ class LineExtractor implements StepRunner.Processor<ByteChunkMessage, LineByteCh
 
     @Override
     public void finish(WriteChannel<LineByteChunkMessage> writeChannel) {
-        writeChannel.writeTo(new LineByteChunkMessage(rest));
+        if (rest == null) {
+            return;
+        }
+        writeChannel.writeTo(new LineByteChunkMessage(rest,0,rest.length-1));
     }
 }
