@@ -1,21 +1,38 @@
 package pl.jborkows.bilion.runners.complex;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.function.Consumer;
 
-class LineByteChunkMessage {
-    final byte[] chunk;
-    final int beginIndex;
-    final int endIndex;
+class LineByteChunkMessages {
+    private static final int SIZE = 1024*8;
+    final List<LineByteChunkMessage> chunks = new ArrayList<>(SIZE);
 
-    LineByteChunkMessage(byte[] chunk, int beginIndex, int endIndex) {
-        this.chunk = chunk;
-        this.beginIndex = beginIndex;
-        this.endIndex = endIndex;
+    void add(LineByteChunkMessage chunk) {
+        chunks.add(chunk);
     }
 
+    void forEach(Consumer<LineByteChunkMessage> consumer) {
+        chunks.forEach(consumer);
+    }
 
+    boolean isEmpty() {
+        return chunks.isEmpty();
+    }
+
+    boolean full() {
+        return SIZE == chunks.size();
+    }
+}
+
+record LineByteChunkMessage(
+        byte[] chunk,
+        int beginIndex,
+        int endIndex
+) {
     @Override
     public String toString() {
-        return new String(Arrays.copyOfRange(chunk, beginIndex, endIndex+1));
+        return new String(Arrays.copyOfRange(chunk, beginIndex, endIndex + 1));
     }
 }

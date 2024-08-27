@@ -15,7 +15,7 @@ public class StagedRunner implements Runner {
         var fileReaderChannel = new MessageChannel<ByteChunkMessage>("File content", 8000);
         var fileReader = new Thread(new FileReader(path, fileReaderChannel));
 
-        var lineChannel = new MessageChannel<LineByteChunkMessage>("Line content", 8000);
+        var lineChannel = new MessageChannel<LineByteChunkMessages>("Line content", 8000);
         var lineParser = new StepRunner<>("line parser",fileReaderChannel, lineChannel, new LineExtractor());
 
         var finisher = new StepRunner<>("finisher",lineChannel, WriteChannel.none(), continuesWork((chunk, channel) -> {
