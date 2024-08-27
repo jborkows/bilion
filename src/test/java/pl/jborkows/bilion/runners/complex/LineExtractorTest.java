@@ -1,6 +1,5 @@
 package pl.jborkows.bilion.runners.complex;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -24,7 +23,7 @@ public class LineExtractorTest {
         var receiver = new Receiver();
         lineExtractor.accept(new ByteChunkMessage("Some text\n".getBytes()), receiver);
         lineExtractor.finish(receiver);
-        assertEquals(1, receiver.read.size());
+        assertEquals(1, receiver.read.size(), "String received " + receiver.read.stream().map(i->"'"+i+"'").collect(Collectors.joining(",")));
     }
 
     @Test
@@ -56,11 +55,9 @@ public class LineExtractorTest {
         var receiver = new Receiver();
         lineExtractor.accept(new ByteChunkMessage("Line 1\nLine 2\nLine 3\n some text".getBytes()), receiver);
         lineExtractor.finish(receiver);
-        assertEquals(4, receiver.read.size());
-        assertEquals("Line 1", receiver.read.get(0));
-        assertEquals("Line 2", receiver.read.get(1));
-        assertEquals("Line 3", receiver.read.get(2));
-        assertEquals(" some text", receiver.read.get(3));
+        assertEquals(2, receiver.read.size());
+        assertEquals("Line 1\nLine 2\nLine 3", receiver.read.get(0));
+        assertEquals(" some text", receiver.read.get(1));
     }
 
     @Test
@@ -69,12 +66,13 @@ public class LineExtractorTest {
         lineExtractor.accept(new ByteChunkMessage("Line 1\nLine 2\nLine 3\n".getBytes()), receiver);
         lineExtractor.accept(new ByteChunkMessage("Line 4\nLine 5\n".getBytes()), receiver);
         lineExtractor.finish(receiver);
-        assertEquals(5, receiver.read.size(), "Got " + receiver.read.stream().map(i->"'"+i+"'").collect(Collectors.joining(",")));
-        assertEquals("Line 1", receiver.read.get(0));
-        assertEquals("Line 2", receiver.read.get(1));
-        assertEquals("Line 3", receiver.read.get(2));
-        assertEquals("Line 4", receiver.read.get(3));
-        assertEquals("Line 5", receiver.read.get(4));
+        expectSize(2, receiver);
+        assertEquals("Line 1\nLine 2\nLine 3", receiver.read.get(0));
+        assertEquals("Line 4\nLine 5", receiver.read.get(1));
+    }
+
+    private static void expectSize(int expectedSize, Receiver receiver) {
+        assertEquals(expectedSize, receiver.read.size(), "Got " + receiver.read.stream().map(i->"'"+i+"'").collect(Collectors.joining(",")));
     }
 
     @Test
@@ -84,7 +82,7 @@ public class LineExtractorTest {
         lineExtractor.accept(new ByteChunkMessage(" continued 2\nsome other".getBytes()), receiver);
         lineExtractor.accept(new ByteChunkMessage(" continued \nsome text at the end".getBytes()), receiver);
         lineExtractor.finish(receiver);
-        assertEquals(4, receiver.read.size());
+        expectSize(4,receiver);
         assertEquals("Line 1", receiver.read.get(0));
         assertEquals("Part of line 2 continued 2", receiver.read.get(1));
         assertEquals("some other continued ", receiver.read.get(2));
@@ -92,12 +90,12 @@ public class LineExtractorTest {
     }
 
 
-    private static class Receiver implements WriteChannel<LineByteChunkMessages> {
+    private static class Receiver implements WriteChannel<LineByteChunkMessage> {
         private final List<String> read = new ArrayList<>();
 
         @Override
-        public void writeTo(LineByteChunkMessages lineByteChunkMessages) {
-            lineByteChunkMessages.forEach(line->read.add(line.toString()));
+        public void writeTo(LineByteChunkMessage lineByteChunkMessages) {
+            read.add(lineByteChunkMessages.toString());
         }
     }
 }

@@ -5,8 +5,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
-class LineByteChunkMessages {
-    private static final int SIZE = 1024*8;
+class LinesByteChunkMessage {
+    private static final int SIZE = 10;
     final List<LineByteChunkMessage> chunks = new ArrayList<>(SIZE);
 
     void add(LineByteChunkMessage chunk) {
