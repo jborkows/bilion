@@ -1,6 +1,6 @@
 package pl.jborkows.bilion;
 
-import pl.jborkows.bilion.runners.*;
+import pl.jborkows.bilion.runners.Runner;
 import pl.jborkows.bilion.runners.complex.StagedRunner;
 
 import java.net.URISyntaxException;

@@ -2,8 +2,6 @@ package pl.jborkows.bilion.runners.complex;
 
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 class StepRunner<MessageIn, MessageOut> extends Thread {
     private final ReadChannel<MessageIn> readChannel;
