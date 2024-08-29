@@ -7,9 +7,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class BytePool {
 
+    public static final int INITIAL_VALUE = 10000;
     private List<byte[]> buffer;
     private List<byte[]> used;
-    private AtomicInteger capacity = new AtomicInteger(10000);
+    private AtomicInteger capacity = new AtomicInteger(INITIAL_VALUE);
     private final Object lock = new Object();
     private  volatile boolean waiting = false;
 
@@ -17,9 +18,9 @@ public class BytePool {
 
     public BytePool() {
 
-        buffer = new ArrayList<>(10_000);
-        used = new ArrayList<>(10_000);
-        for (int i = 0; i < 10_000; i++) {
+        buffer = new ArrayList<>(INITIAL_VALUE);
+        used = new ArrayList<>(INITIAL_VALUE);
+        for (int i = 0; i < INITIAL_VALUE; i++) {
             buffer.add(new byte[32 * 1024]);
         }
     }
