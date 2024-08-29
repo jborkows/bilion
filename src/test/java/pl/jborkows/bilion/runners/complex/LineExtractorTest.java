@@ -21,7 +21,7 @@ public class LineExtractorTest {
     @Test
     void shouldReadWholeLine() {
         var receiver = new Receiver();
-        lineExtractor.accept(new ByteChunkMessage("Some text\n".getBytes()), receiver);
+        lineExtractor.accept(new ByteChunkMessage("Some text\n"), receiver);
         lineExtractor.finish(receiver);
         assertEquals(1, receiver.read.size(), "String received " + receiver.read.stream().map(i->"'"+i+"'").collect(Collectors.joining(",")));
     }
@@ -29,7 +29,7 @@ public class LineExtractorTest {
     @Test
     void shouldIgnoreEndOfLine() {
         var receiver = new Receiver();
-        lineExtractor.accept(new ByteChunkMessage("Some text\n".getBytes()), receiver);
+        lineExtractor.accept(new ByteChunkMessage("Some text\n"), receiver);
         lineExtractor.finish(receiver);
         assertEquals(1, receiver.read.size(), "String received " + receiver.read.stream().map(i->"'"+i+"'").collect(Collectors.joining(",")));
     }
@@ -37,14 +37,14 @@ public class LineExtractorTest {
     @Test
     void shouldNotWriteNotCompletedLines() {
         var receiver = new Receiver();
-        lineExtractor.accept(new ByteChunkMessage("Part of line".getBytes()), receiver);
+        lineExtractor.accept(new ByteChunkMessage("Part of line"), receiver);
         assertEquals(0, receiver.read.size());
     }
 
     @Test
     void shouldWriteLineEvenIfNotCompletedWhenFinished() {
         var receiver = new Receiver();
-        lineExtractor.accept(new ByteChunkMessage("Part of line".getBytes()), receiver);
+        lineExtractor.accept(new ByteChunkMessage("Part of line"), receiver);
         lineExtractor.finish(receiver);
         assertEquals(1, receiver.read.size());
         assertEquals("Part of line", receiver.read.get(0));
@@ -53,7 +53,7 @@ public class LineExtractorTest {
     @Test
     void shouldBeAbleToReadMultipleLines() {
         var receiver = new Receiver();
-        lineExtractor.accept(new ByteChunkMessage("Line 1\nLine 2\nLine 3\n some text".getBytes()), receiver);
+        lineExtractor.accept(new ByteChunkMessage("Line 1\nLine 2\nLine 3\n some text"), receiver);
         lineExtractor.finish(receiver);
         assertEquals(2, receiver.read.size());
         assertEquals("Line 1\nLine 2\nLine 3", receiver.read.get(0));
@@ -63,8 +63,8 @@ public class LineExtractorTest {
     @Test
     void shouldReadExactlyLines() {
         var receiver = new Receiver();
-        lineExtractor.accept(new ByteChunkMessage("Line 1\nLine 2\nLine 3\n".getBytes()), receiver);
-        lineExtractor.accept(new ByteChunkMessage("Line 4\nLine 5\n".getBytes()), receiver);
+        lineExtractor.accept(new ByteChunkMessage("Line 1\nLine 2\nLine 3\n"), receiver);
+        lineExtractor.accept(new ByteChunkMessage("Line 4\nLine 5\n"), receiver);
         lineExtractor.finish(receiver);
         expectSize(2, receiver);
         assertEquals("Line 1\nLine 2\nLine 3", receiver.read.get(0));
@@ -78,9 +78,9 @@ public class LineExtractorTest {
     @Test
     void shouldBeAbleToJoinFromParts() {
         var receiver = new Receiver();
-        lineExtractor.accept(new ByteChunkMessage("Line 1\nPart of line 2".getBytes()), receiver);
-        lineExtractor.accept(new ByteChunkMessage(" continued 2\nsome other".getBytes()), receiver);
-        lineExtractor.accept(new ByteChunkMessage(" continued \nsome text at the end".getBytes()), receiver);
+        lineExtractor.accept(new ByteChunkMessage("Line 1\nPart of line 2"), receiver);
+        lineExtractor.accept(new ByteChunkMessage(" continued 2\nsome other"), receiver);
+        lineExtractor.accept(new ByteChunkMessage(" continued \nsome text at the end"), receiver);
         lineExtractor.finish(receiver);
         expectSize(4,receiver);
         assertEquals("Line 1", receiver.read.get(0));

@@ -21,10 +21,10 @@ class FileReader implements Runnable {
     public void run() {
         final int bufferSize = 32 * 1024;
         try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(path.toFile()));) {
-            byte[] buffer = new byte[bufferSize];
+            byte[] buffer = BytePool.INSTANCE.chunk();
             int bytesRead;
             while ((bytesRead = bis.read(buffer, 0, bufferSize)) != -1) {
-               writeChannel.writeTo(new ByteChunkMessage(Arrays.copyOf(buffer,bytesRead) ));
+               writeChannel.writeTo(new ByteChunkMessage(buffer,bytesRead ));
             }
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);

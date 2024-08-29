@@ -18,6 +18,7 @@ public class StagedRunner implements Runner {
         var lineParser = new StepRunner<>("line parser",fileReaderChannel, lineChannel, new LineExtractor());
 
         var finisher = new StepRunner<>("finisher",lineChannel, WriteChannel.none(), continuesWork((chunk, channel) -> {
+            BytePool.INSTANCE.release(chunk.chunk());
 //            var message = chunk.toString().replace('\n','x');
 //            System.out.println(message);
             //NOP
