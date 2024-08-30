@@ -5,7 +5,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Arrays;
 
 class FileReader implements Runnable {
 
@@ -19,12 +18,11 @@ class FileReader implements Runnable {
 
     @Override
     public void run() {
-        final int bufferSize = 32 * 1024;
         try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(path.toFile()));) {
             byte[] buffer = BytePool.INSTANCE.chunk();
             int bytesRead;
-            while ((bytesRead = bis.read(buffer, 0, bufferSize)) != -1) {
-               writeChannel.writeTo(new ByteChunkMessage(buffer,bytesRead ));
+            while ((bytesRead = bis.read(buffer, 0, BytePool.FILE_BUFFER_SIZE)) != -1) {
+                writeChannel.writeTo(new ByteChunkMessage(buffer, bytesRead));
             }
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
