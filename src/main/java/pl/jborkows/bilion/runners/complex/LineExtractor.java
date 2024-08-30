@@ -5,7 +5,6 @@ import java.util.Arrays;
 class LineExtractor implements StepRunner.Processor<ByteChunkMessage, LineByteChunkMessage> {
 
     private byte[] rest;
-    private LinesByteChunkMessage lineByteChunkMessages = new LinesByteChunkMessage();
 
     @Override
     public void accept(ByteChunkMessage byteChunkMessage, WriteChannel<LineByteChunkMessage> writeChannel) {
