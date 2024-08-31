@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 
 import static pl.jborkows.bilion.runners.complex.StepRunner.Processor.continuesWork;
@@ -15,6 +16,12 @@ public class LineReadingIT {
     @Test
    void readLines() throws URISyntaxException, InterruptedException, IOException {
         String name = "test_reading.csv";
+        extracted(name);
+    }
+
+    @Test
+    void readingVerySmall() throws URISyntaxException, InterruptedException, IOException {
+        String name = "test_reading_very_small.csv";
         extracted(name);
     }
 
@@ -34,10 +41,10 @@ public class LineReadingIT {
         var lineChannel = new MessageChannel<LineByteChunkMessage>("Line content", 1);
         var lineExtractor = new StepRunner<>("line extractor",fileReaderChannel, lineChannel, new LineExtractor());
 
-        var temporaryFile = Files.createTempFile("extractor","data");
+        var temporaryFile = Files.createTempFile("extractor_"+name,"data");
         var finisher = new StepRunner<>("finisher",lineChannel, WriteChannel.none(), continuesWork((chunk, channel) -> {
             try {
-                Files.write(temporaryFile, Arrays.copyOfRange(chunk.chunk(),chunk.beginIndex(), chunk.endIndex()));
+                Files.write(temporaryFile, Arrays.copyOfRange(chunk.chunk(),chunk.beginIndex(), chunk.endIndex()), StandardOpenOption.APPEND);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -58,6 +65,6 @@ public class LineReadingIT {
         for (int i = 0; i < allReadLines.size(); i++) {
             Assertions.assertEquals(  allReadLines.get(i), temporalLines.get(i), "Not found " + allReadLines.get(i) + " at line " + (i + 1));
         }
-        Files.deleteIfExists(temporaryFile);
+//        Files.deleteIfExists(temporaryFile);
     }
 }

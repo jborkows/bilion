@@ -76,8 +76,8 @@ public class LineExtractorTest {
         lineExtractor.accept(new ByteChunkMessage("Line 4\nLine 5\n"), receiver);
         lineExtractor.finish(receiver);
         expectSize(2, receiver);
-        assertEquals("Line 1\nLine 2\nLine 3", receiver.read.get(0));
-        assertEquals("Line 4\nLine 5", receiver.read.get(1));
+        assertEquals("Line 1\nLine 2\nLine 3\n", receiver.read.get(0));
+        assertEquals("Line 4\nLine 5\n", receiver.read.get(1));
     }
 
     private static void expectSize(int expectedSize, Receiver receiver) {

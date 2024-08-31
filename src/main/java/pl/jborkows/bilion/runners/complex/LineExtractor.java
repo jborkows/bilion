@@ -20,7 +20,7 @@ class LineExtractor implements StepRunner.Processor<ByteChunkMessage, LineByteCh
             if (i < 0) {
                 rest = Arrays.copyOfRange(chunk, 0, length);
             } else if (i == length - 1) {
-                writeChannel.writeTo(new LineByteChunkMessage(chunk, 0, length - 2));
+                writeChannel.writeTo(new LineByteChunkMessage(chunk, 0, length - 1));
             } else {
                 writeChannel.writeTo(new LineByteChunkMessage(chunk, 0, i-1));
                 rest = Arrays.copyOfRange(chunk, i+1, length);
