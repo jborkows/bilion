@@ -27,6 +27,18 @@ public class LineExtractorTest {
     }
 
     @Test
+    void shouldReadWholeLineEvenIfBufferIsNotFull() {
+        var receiver = new Receiver();
+        var buffer = new byte[100];
+        var text= "Some text\n\n";
+        System.arraycopy(text.getBytes(), 0, buffer, 0, text.length());
+        lineExtractor.accept(new ByteChunkMessage(buffer, text.length()), receiver);
+        lineExtractor.finish(receiver);
+        assertEquals(1, receiver.read.size(), "String received " + receiver.read.stream().map(i->"'"+i+"'").collect(Collectors.joining(",")));
+        assertEquals("Some text", receiver.read.getFirst().trim());
+    }
+
+    @Test
     void shouldReadWholeLineAndIgnoreEmptyLine() {
         var receiver = new Receiver();
         lineExtractor.accept(new ByteChunkMessage("Some text\n\n"), receiver);

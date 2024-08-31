@@ -65,6 +65,6 @@ public class LineReadingIT {
         for (int i = 0; i < allReadLines.size(); i++) {
             Assertions.assertEquals(  allReadLines.get(i), temporalLines.get(i), "Not found " + allReadLines.get(i) + " at line " + (i + 1));
         }
-//        Files.deleteIfExists(temporaryFile);
+        Files.deleteIfExists(temporaryFile);
     }
 }

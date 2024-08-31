@@ -34,3 +34,7 @@ build/
 ### Mac OS ###
 .DS_Store
 **/*data.txt
+**/*~
+graal.csv
+jvm.csv
+report.csv
