@@ -71,8 +71,11 @@ class LineExtractor implements StepRunner.Processor<ByteChunkMessage, LineByteCh
     public void finish(WriteChannel<LineByteChunkMessage> writeChannel) {
 
         if (rest == null) {
+
+            System.out.println("Rest was empty");
             return;
         }
+        System.out.println("Writing rest: "+ new String(rest));
         writeChannel.writeTo(new LineByteChunkMessage(rest, 0, rest.length - 1));
     }
 

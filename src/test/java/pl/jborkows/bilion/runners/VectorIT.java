@@ -1,7 +1,5 @@
 package pl.jborkows.bilion.runners;
 
-import org.openjdk.jmh.runner.Runner;
-
 import jdk.incubator.vector.IntVector;
 import jdk.incubator.vector.VectorOperators;
 import jdk.incubator.vector.VectorSpecies;
@@ -9,7 +7,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Random;
 
+@EnabledIfEnvironmentVariable(named = "PERFORMANCE_TESTS", matches = ".+")
 public class VectorIT {
     static final VectorSpecies<Integer> SPECIES = IntVector.SPECIES_PREFERRED;
 private Path outputPath;

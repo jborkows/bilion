@@ -19,9 +19,12 @@ class FileReader implements Runnable {
     @Override
     public void run() {
         try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(path.toFile()));) {
-            byte[] buffer = BytePool.INSTANCE.chunk();
-            int bytesRead;
-            while ((bytesRead = bis.read(buffer, 0, BytePool.FILE_BUFFER_SIZE)) != -1) {
+            while (true){
+                byte[] buffer = BytePool.INSTANCE.chunk();
+                int bytesRead = bis.read(buffer, 0 , BytePool.FILE_BUFFER_SIZE);
+                if(bytesRead == -1){
+                    break;
+                }
                 writeChannel.writeTo(new ByteChunkMessage(buffer, bytesRead));
             }
         } catch (FileNotFoundException e) {

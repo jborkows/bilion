@@ -3,15 +3,16 @@ package pl.jborkows.bilion.runners.complex;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 class BytePool {
 
-    public static final int INITIAL_VALUE = 5;
+    public static final int INITIAL_VALUE = 1000;
     public static final int FILE_BUFFER_SIZE = 32 * 1024;
     private List<byte[]> buffer;
     private List<byte[]> used;
     private AtomicInteger capacity = new AtomicInteger(INITIAL_VALUE);
-    private final Object lock = new Object();
     private  volatile boolean waiting = false;
 
     static BytePool INSTANCE = new BytePool();
@@ -30,7 +31,7 @@ class BytePool {
             try {
                 System.out.println("Waiting in pool");
                 waiting = true;
-                lock.wait();
+                wait();
                 waiting = false;
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
@@ -47,7 +48,7 @@ class BytePool {
             buffer.add(array);
             capacity.incrementAndGet();
             if(waiting) {
-                lock.notifyAll();
+                notifyAll();
             }
         }
 

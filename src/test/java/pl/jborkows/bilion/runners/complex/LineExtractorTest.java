@@ -27,6 +27,15 @@ public class LineExtractorTest {
     }
 
     @Test
+    void shouldReadWholeLineAndIgnoreEmptyLine() {
+        var receiver = new Receiver();
+        lineExtractor.accept(new ByteChunkMessage("Some text\n\n"), receiver);
+        lineExtractor.finish(receiver);
+        assertEquals(1, receiver.read.size(), "String received " + receiver.read.stream().map(i->"'"+i+"'").collect(Collectors.joining(",")));
+        assertEquals("Some text", receiver.read.getFirst().trim());
+    }
+
+    @Test
     void shouldIgnoreEndOfLine() {
         var receiver = new Receiver();
         lineExtractor.accept(new ByteChunkMessage("Some text\n"), receiver);
