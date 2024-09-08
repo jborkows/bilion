@@ -33,7 +33,7 @@ class MessageChannel<Message> implements ReadChannel<Message>, WriteChannel<Mess
 
         @Override
         public RejectionStep onRejection() {
-            System.out.println(channelName + "-> Retrying...");
+//            System.out.println(channelName + "-> Retrying...");
             return RejectionStep.RETRY;
         }
 

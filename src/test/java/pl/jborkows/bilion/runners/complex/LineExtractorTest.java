@@ -77,7 +77,7 @@ public class LineExtractorTest {
         lineExtractor.accept(new ByteChunkMessage("Line 1\nLine 2\nLine 3\n some text"), receiver);
         lineExtractor.finish(receiver);
         assertEquals(2, receiver.read.size());
-        assertEquals("Line 1\nLine 2\nLine 3", receiver.read.get(0));
+        assertEquals("Line 1\nLine 2\nLine 3\n", receiver.read.get(0));
         assertEquals(" some text", receiver.read.get(1));
     }
 
@@ -104,9 +104,9 @@ public class LineExtractorTest {
         lineExtractor.accept(new ByteChunkMessage(" continued \nsome text at the end"), receiver);
         lineExtractor.finish(receiver);
         expectSize(4,receiver);
-        assertEquals("Line 1", receiver.read.get(0));
-        assertEquals("Part of line 2 continued 2", receiver.read.get(1));
-        assertEquals("some other continued ", receiver.read.get(2));
+        assertEquals("Line 1\n", receiver.read.get(0));
+        assertEquals("Part of line 2 continued 2\n", receiver.read.get(1));
+        assertEquals("some other continued \n", receiver.read.get(2));
         assertEquals("some text at the end", receiver.read.get(3));
     }
 

@@ -40,7 +40,7 @@ public class FileReaderIT {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            BytePool.INSTANCE.release(chunk.chunk);
+            BytePool.release(chunk.chunk);
         }));
         finisher.start();
         fileReader.start();
