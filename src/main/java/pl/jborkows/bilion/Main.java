@@ -1,6 +1,6 @@
 package pl.jborkows.bilion;
 
-import pl.jborkows.bilion.runners.Runner;
+import pl.jborkows.bilion.runners.*;
 import pl.jborkows.bilion.runners.complex.StagedRunner;
 
 import java.net.URISyntaxException;
@@ -25,7 +25,6 @@ public class Main {
 //                new OwnSplitDoubleActiveParser(),
 //                new OwnSplitDoubleActiveParserStaticWorkingArray(),
 //                new OwnSplitDoubleActiveParserIndexBased(),
-//                new OwnSplitDoubleActiveParserIndexBasedHashFun(),
 //                new OwnSplitDoubleActiveParserIndexBasedLimitedHashFun(),
 //                new OwnSplitDoubleActiveParserIndexBasedTwoThreads(),
 //                new OwnSplitDoubleActiveParserIndexBasedMultipleThreads(1),

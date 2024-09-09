@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -30,7 +29,7 @@ public class FileReaderIT {
         var path = Paths.get(Thread.currentThread().
                 getContextClassLoader().getResource(name).toURI());
 
-        var fileReaderChannel = new MessageChannel<ByteChunkMessage>("File content", 10);
+        var fileReaderChannel = new MessageChannel<ByteChunkMessage>("File content");
         var fileReader = new Thread(new FileReader(path, fileReaderChannel));
 
         var tempFile = Files.createTempFile("reading","txt");

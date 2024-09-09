@@ -8,7 +8,6 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.Arrays;
 
 import static pl.jborkows.bilion.runners.complex.StepRunner.Processor.continuesWork;
 
@@ -35,10 +34,10 @@ public class LineReadingIT {
         var path = Paths.get(Thread.currentThread().
                 getContextClassLoader().getResource(name).toURI());
 
-        var fileReaderChannel = new MessageChannel<ByteChunkMessage>("File content", 1);
+        var fileReaderChannel = new MessageChannel<ByteChunkMessage>("File content");
         var fileReader = new Thread(new FileReader(path, fileReaderChannel));
 
-        var lineChannel = new MessageChannel<LineByteChunkMessage>("Line content", 1);
+        var lineChannel = new MessageChannel<LineByteChunkMessage>("Line content");
         var lineExtractor = new StepRunner<>("line extractor", fileReaderChannel, lineChannel, new LineExtractor());
 
         var temporaryFile = Files.createTempFile("extractor_"+name,"data");

@@ -7,8 +7,8 @@
   <name>Archetype - bilion</name>
   <url>http://maven.apache.org</url>
   <properties>
-    <maven.compiler.source>22</maven.compiler.source>
-    <maven.compiler.target>22</maven.compiler.target>
+    <maven.compiler.source>21</maven.compiler.source>
+    <maven.compiler.target>21</maven.compiler.target>
     <junit.jupiter.version>5.9.0</junit.jupiter.version>
     <jmh.version>1.37</jmh.version>
 
@@ -46,7 +46,6 @@
         <version>3.4.0</version>
         <configuration>
           <useModulePath>true</useModulePath>
-          <argLine>--enable-preview  --add-modules=jdk.incubator.vector</argLine>
         </configuration>
       </plugin>
       <plugin>
@@ -55,7 +54,6 @@
         <version>3.4.0</version>
         <configuration>
           <useModulePath>true</useModulePath>
-          <argLine>--enable-preview  --add-modules=jdk.incubator.vector</argLine>
         </configuration>
 
         <executions>
@@ -85,9 +83,7 @@
           <artifactId>maven-compiler-plugin</artifactId>
           <version>3.13.0</version> <!-- Ensure this is a version that supports the 'release' attribute -->
           <configuration>
-            <release>22</release>
-            <compilerArgs>--enable-preview</compilerArgs>
-            <compilerArgs>--add-modules=jdk.incubator.vector</compilerArgs>
+            <release>21</release>
           </configuration>
         </plugin>
 
