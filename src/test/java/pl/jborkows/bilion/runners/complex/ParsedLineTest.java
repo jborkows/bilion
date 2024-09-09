@@ -34,7 +34,7 @@ public class ParsedLineTest {
         return messages.stream().map(ParsedLineMessage::parsedLineItems).flatMap(Collection::stream).toList();
     }
 
-//    @Test
+    @Test
     void shouldParseNumber() {
         var receiver = new Receiver();
         lineParser.accept(LineByteChunkMessage.fromString("B;-12.34\nC;9.5"), receiver);
@@ -42,10 +42,8 @@ public class ParsedLineTest {
 
         var flat = flatten(receiver.read);
         assertFalse(flat.isEmpty());
-        assertEquals(-12, flat.getFirst().integerPart());
-        assertEquals(340, flat.getFirst().decimalPart());
-        assertEquals(9, flat.get(1).integerPart());
-        assertEquals(500, flat.get(1).decimalPart());
+        assertEquals(-12*1000-340, flat.getFirst().value());
+        assertEquals(9*1000+500, flat.get(1).value());
     }
 
 

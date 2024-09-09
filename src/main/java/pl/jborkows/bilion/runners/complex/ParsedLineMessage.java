@@ -6,7 +6,7 @@ import java.util.List;
 record ParsedLineMessage(List<ParsedLineItem> parsedLineItems){
 }
 
-record ParsedLineItem (byte[] name, int begin, int offsetName,  int integerPart, int decimalPart){
+record ParsedLineItem (byte[] name, int begin, int offsetName,  int value ){
     String stationName(){
         return new String(name, begin,  offsetName, StandardCharsets.UTF_8);
     }

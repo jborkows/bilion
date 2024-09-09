@@ -12,12 +12,12 @@ class BytePool {
     private List<byte[]> buffer;
     private List<byte[]> used;
     private AtomicInteger capacity;
-    private  volatile boolean waiting = false;
+    private volatile boolean waiting = false;
 
-    static BytePool INSTANCE = new BytePool(INITIAL_VALUE*5,FILE_BUFFER_SIZE, "File reader");
-    static BytePool WORKING = new BytePool(INITIAL_VALUE*8,FILE_BUFFER_SIZE*2, "New line");
+    static BytePool INSTANCE = new BytePool(INITIAL_VALUE * 5, FILE_BUFFER_SIZE, "File reader");
+    static BytePool WORKING = new BytePool(INITIAL_VALUE * 8, FILE_BUFFER_SIZE * 2, "New line");
 
-    private BytePool(int poolSize,int size, String name) {
+    private BytePool(int poolSize, int size, String name) {
         capacity = new AtomicInteger(poolSize);
         buffer = new ArrayList<>(poolSize);
         used = new ArrayList<>(poolSize);
@@ -28,7 +28,9 @@ class BytePool {
     }
 
     public static void release(byte[] oldChunk) {
-        if(!INSTANCE.releaseChunk(oldChunk))  WORKING.releaseChunk(oldChunk);
+        if (!INSTANCE.releaseChunk(oldChunk)) {
+            WORKING.releaseChunk(oldChunk);
+        }
     }
 
     synchronized byte[] chunk() {
@@ -52,7 +54,7 @@ class BytePool {
         if (used.remove(array)) {
             buffer.add(array);
             capacity.incrementAndGet();
-            if(waiting) {
+            if (waiting) {
                 notifyAll();
             }
             return true;

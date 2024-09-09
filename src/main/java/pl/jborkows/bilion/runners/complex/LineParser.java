@@ -67,25 +67,19 @@ class LineParser implements StepRunner.Processor<LineByteChunkMessage, ParsedLin
     }
 
     private static ParsedLineItem parse(int beginName, int endName, int beginNumber, int endNumber, boolean minus, byte[] lines, int beginDecimal, int endDecimal) {
-        int multiplier = 1;
         int number = switch (endNumber-beginNumber){
-            case 1 -> parseDigit(lines[beginNumber]);
-            case 2 -> parseDigit(lines[beginNumber])*10+parseDigit(lines[beginNumber+1]);
+            case 0 -> parseDigit(lines[beginNumber]);
+            case 1 -> parseDigit(lines[beginNumber])*10+parseDigit(lines[beginNumber+1]);
             default -> 0;
         };
-        for (int i = beginNumber; i <= endNumber; i++) {
-            number = parseDigit(lines[i]) + number * multiplier;
-            multiplier *= 10;
-        }
-        number = minus ? -number : number;
-        int decimal = 0;
-        switch (endDecimal - beginDecimal) {
-            case 0 -> decimal = parseDigit(lines[beginDecimal]) * 100;
-            case 1 -> decimal = parseDigit(lines[beginDecimal]) * 100 + parseDigit(lines[endDecimal]) * 10;
+        int decimal =switch (endDecimal - beginDecimal) {
+            case 0 ->  parseDigit(lines[beginDecimal]) * 100;
+            case 1 ->  parseDigit(lines[beginDecimal]) * 100 + parseDigit(lines[endDecimal]) * 10;
             case 2 ->
-                    decimal = parseDigit(lines[beginDecimal]) * 100 + parseDigit(lines[beginDecimal + 1]) * 10 + parseDigit(lines[endDecimal]);
-        }
-        return new ParsedLineItem(lines, beginName, endName - beginName+1, number, decimal);
+                     parseDigit(lines[beginDecimal]) * 100 + parseDigit(lines[beginDecimal + 1]) * 10 + parseDigit(lines[endDecimal]);
+            default -> 0;
+        };
+        return new ParsedLineItem(lines, beginName, endName - beginName+1, (minus?-1:1)*(number*1000+decimal));
     }
 
     private static int parseDigit(byte digit) {
