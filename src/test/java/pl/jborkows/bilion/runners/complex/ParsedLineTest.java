@@ -2,57 +2,46 @@ package pl.jborkows.bilion.runners.complex;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIf;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ParsedLineTest {
     private LineParser lineParser;
+    private Store store;
 
     @BeforeEach
     void setUp() {
-        lineParser = new LineParser();
+        store = new Store();
+        lineParser = new LineParser(store);
     }
 
 
     @Test
     void shouldParseName() {
-        var receiver = new Receiver();
-        lineParser.accept(LineByteChunkMessage.fromString("AAąAA;12.34\nB C;12.34"), receiver);
-        lineParser.finish(receiver);
-        var flat = flatten(receiver.read);
+        lineParser.accept(LineByteChunkMessage.fromString("AAąAA;12.34\nB C;12.34"), WriteChannel.none());
+        lineParser.finish(WriteChannel.none());
+        var flat = store.getData();
         assertFalse(flat.isEmpty());
-        assertEquals("AAąAA", flat.getFirst().stationName());
-        assertEquals("B C", flat.get(1).stationName());
-    }
-    private List<ParsedLineItem> flatten(List<ParsedLineMessage> messages){
-        return messages.stream().map(ParsedLineMessage::parsedLineItems).flatMap(Collection::stream).toList();
+
+        assertTrue(flat.stream().anyMatch(d-> Objects.equals(d.name(), "AAąAA")));
+        assertTrue(flat.stream().anyMatch(d-> Objects.equals(d.name(), "B C")));
     }
 
     @Test
     void shouldParseNumber() {
-        var receiver = new Receiver();
-        lineParser.accept(LineByteChunkMessage.fromString("B;-12.34\nC;9.5"), receiver);
-        lineParser.finish(receiver);
+        lineParser.accept(LineByteChunkMessage.fromString("B;-12.34\nC;9.5"), WriteChannel.none());
+        lineParser.finish(WriteChannel.none());
 
-        var flat = flatten(receiver.read);
+        var flat = store.getData();
         assertFalse(flat.isEmpty());
-        assertEquals(-12*1000-340, flat.getFirst().value());
-        assertEquals(9*1000+500, flat.get(1).value());
+
+        System.out.println(flat);
+        assertTrue(flat.stream().anyMatch(d->d.max==-12*1000-340));
+        assertTrue(flat.stream().anyMatch(d->d.max==9500));
     }
 
-
-    private static class Receiver implements WriteChannel<ParsedLineMessage> {
-        private final List<ParsedLineMessage> read = new ArrayList<>();
-
-        @Override
-        public void writeTo(ParsedLineMessage message) {
-            read.add(message);
-        }
-    }
 }

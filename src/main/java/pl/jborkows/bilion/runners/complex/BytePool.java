@@ -1,7 +1,9 @@
 package pl.jborkows.bilion.runners.complex;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 class BytePool {
@@ -9,8 +11,9 @@ class BytePool {
     public static final int INITIAL_VALUE = 2000;
     public static final int FILE_BUFFER_SIZE = 32 * 1024;
     private final String name;
-    private List<byte[]> buffer;
-    private List<byte[]> used;
+    private Map<Integer,byte[]> buffer;
+    private Map<Integer,byte[]> used;
+    private List<Integer> keys;
     private AtomicInteger capacity;
     private volatile boolean waiting = false;
 
@@ -19,10 +22,14 @@ class BytePool {
 
     private BytePool(int poolSize, int size, String name) {
         capacity = new AtomicInteger(poolSize);
-        buffer = new ArrayList<>(poolSize);
-        used = new ArrayList<>(poolSize);
+        buffer = new HashMap<>(poolSize);
+        used = new HashMap<>(poolSize);
+        keys = new ArrayList<>(poolSize);
         for (int i = 0; i < poolSize; i++) {
-            buffer.add(new byte[size]);
+            byte[] bytes = new byte[size];
+            int key = System.identityHashCode(bytes);
+            buffer.put(key,bytes);
+            keys.add(key);
         }
         this.name = name;
     }
@@ -44,15 +51,18 @@ class BytePool {
                 throw new RuntimeException(e);
             }
         }
-        var array = buffer.removeLast();
-        used.add(array);
+        var array = keys.removeLast();
+        var chunk = buffer.remove(array);
+        used.put(array,chunk);
         capacity.decrementAndGet();
-        return array;
+        return chunk;
     }
 
     private synchronized boolean releaseChunk(byte[] array) {
-        if (used.remove(array)) {
-            buffer.add(array);
+        int key = System.identityHashCode(array);
+        if (used.remove(key)!=null) {
+            buffer.put(key,array);
+            keys.add(key);
             capacity.incrementAndGet();
             if (waiting) {
                 notifyAll();

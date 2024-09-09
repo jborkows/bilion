@@ -1,32 +1,30 @@
 package pl.jborkows.bilion.runners.complex;
 
-import java.util.ArrayList;
-import java.util.List;
 
-class LineParser implements StepRunner.Processor<LineByteChunkMessage, ParsedLineMessage> {
-    private final int batchSize = 1000;
-    private List<ParsedLineItem> items = new ArrayList<>(batchSize);
+class LineParser implements StepRunner.Processor<LineByteChunkMessage, Void> {
+    private final Store store;
+
+    LineParser(Store store) {
+        this.store = store;
+    }
+
     @Override
-    public void accept(LineByteChunkMessage lineByteChunkMessage, WriteChannel<ParsedLineMessage> writeChannel) {
-        var lines = lines(lineByteChunkMessage);
+    public void accept(LineByteChunkMessage lineByteChunkMessage, WriteChannel<Void> writeChannel) {
         int endName = 0;
         int beginNumber = 0;
         int endNumber = 0;
         int beginDecimal = 0;
         int endDecimal = 0;
         boolean minus = false;
-        int i = 0;
-        int beginName = i;
-        for (; i < lines.length; i++) {
-            switch (lines[i]) {
+        int i = lineByteChunkMessage.beginIndex();
+        int beginName = lineByteChunkMessage.beginIndex();
+
+        int length = lineByteChunkMessage.endIndex();
+        for (; i <= length; i++) {
+            switch (lineByteChunkMessage.chunk()[i]) {
                 case '\n' -> {
                     endDecimal = i - 1;
-                    var message = parse(beginName, endName, beginNumber, endNumber, minus, lines, beginDecimal, endDecimal);
-                    items.add(message);
-                    if(items.size() >= batchSize) {
-                        writeChannel.writeTo(new ParsedLineMessage(items));
-                        items = new ArrayList<>(batchSize);
-                    }
+                     parse(beginName, endName, beginNumber, endNumber, minus, lineByteChunkMessage.chunk(), beginDecimal, endDecimal);
                     beginName = i + 1;
                     minus = false;
                 }
@@ -49,24 +47,19 @@ class LineParser implements StepRunner.Processor<LineByteChunkMessage, ParsedLin
             }
         }
         if (i > beginName) {
-            var message = parse(beginName, endName, beginNumber, endNumber, minus, lines, beginDecimal, i - 1);
-            items.add(message);
+             parse(beginName, endName, beginNumber, endNumber, minus, lineByteChunkMessage.chunk(), beginDecimal, i - 1);
         }
-    }
-    private byte[] lines(LineByteChunkMessage lineByteChunkMessage) {
-        byte[] lines = lineByteChunkMessage.copy();
+
         lineByteChunkMessage.release();
-        return lines;
     }
+
 
     @Override
-    public void finish(WriteChannel<ParsedLineMessage> writeChannel) {
-        if(!items.isEmpty()) {
-            writeChannel.writeTo(new ParsedLineMessage(items));
-        }
+    public void finish(WriteChannel<Void> writeChannel) {
+        store.gather();
     }
 
-    private static ParsedLineItem parse(int beginName, int endName, int beginNumber, int endNumber, boolean minus, byte[] lines, int beginDecimal, int endDecimal) {
+    private void parse(int beginName, int endName, int beginNumber, int endNumber, boolean minus, byte[] lines, int beginDecimal, int endDecimal) {
         int number = switch (endNumber-beginNumber){
             case 0 -> parseDigit(lines[beginNumber]);
             case 1 -> parseDigit(lines[beginNumber])*10+parseDigit(lines[beginNumber+1]);
@@ -79,7 +72,7 @@ class LineParser implements StepRunner.Processor<LineByteChunkMessage, ParsedLin
                      parseDigit(lines[beginDecimal]) * 100 + parseDigit(lines[beginDecimal + 1]) * 10 + parseDigit(lines[endDecimal]);
             default -> 0;
         };
-        return new ParsedLineItem(lines, beginName, endName - beginName+1, (minus?-1:1)*(number*1000+decimal));
+        store.register(lines,beginName,endName-beginName+1, (minus?-1:1)*(number*1000+decimal));
     }
 
     private static int parseDigit(byte digit) {
